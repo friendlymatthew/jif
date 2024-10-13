@@ -1,0 +1,92 @@
+use eyre::{Ok, Result};
+
+#[derive(Debug)]
+pub struct BitStream {
+    // in bits
+    pub cursor: usize,
+    pub data: Vec<u8>,
+}
+
+impl BitStream {
+    pub fn new(image_data: &Vec<Vec<u8>>) -> BitStream {
+        let mut data = vec![];
+
+        for image in image_data {
+            data.extend(image);
+        }
+
+        BitStream { cursor: 0, data }
+    }
+
+    #[inline]
+    pub fn eof(&self, bit_length: usize) -> bool {
+        self.cursor + bit_length > self.data.len() * 8
+    }
+
+    #[inline]
+    fn divmod_8(&self) -> (usize, usize) {
+        (self.cursor / 8, self.cursor % 8)
+    }
+
+    pub fn read_bit(&mut self) -> u8 {
+        let (byte_idx, bit_idx) = self.divmod_8();
+        let byte = self.data[byte_idx];
+        self.cursor += 1;
+        (byte >> bit_idx) & 0b1
+    }
+
+    pub fn next(&mut self, mut bit_length: usize) -> Result<usize> {
+        let a = bit_length;
+        let mut out = 0;
+        while bit_length > 0 {
+            out <<= 1;
+            out |= self.read_bit();
+            bit_length -= 1;
+        }
+
+        let mut reverse = 0;
+        for _ in 0..a {
+            let b = out & 0b1;
+            reverse <<= 1;
+            reverse |= b;
+            out >>= 1;
+        }
+
+        Ok(reverse as usize)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_bit() -> Result<()> {
+        let data = [
+            0x8C, 0x2D, 0x99, 0x87, 0x2A, 0x1C, 0xDC, 0x33, 0xA0, 0x02, 0x75, 0xEC, 0x95, 0xFA,
+            0xA8, 0xDE, 0x60, 0x8C, 0x04, 0x91, 0x4C, 0x01, 0x00,
+        ];
+        let mut bitstream = BitStream::new(&vec![data.to_vec()]);
+
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 1);
+        assert_eq!(bitstream.read_bit(), 1);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_bytes() -> Result<()> {
+        let data = [0x8c];
+
+        let mut bitstream = BitStream::new(&vec![data.to_vec()]);
+
+        assert_eq!(bitstream.next(3)?, 4);
+        assert_eq!(bitstream.next(3)?, 1);
+
+        Ok(())
+    }
+}
