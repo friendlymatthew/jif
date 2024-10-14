@@ -40,7 +40,7 @@ impl BitStream {
         let mut out = 0;
         while bit_length > 0 {
             out <<= 1;
-            out |= self.read_bit();
+            out |= self.read_bit() as usize;
             bit_length -= 1;
         }
 
