@@ -35,24 +35,14 @@ impl BitStream {
         (byte >> bit_idx) & 0b1
     }
 
-    pub fn next(&mut self, mut bit_length: usize) -> Result<usize> {
-        let a = bit_length;
-        let mut out = 0;
-        while bit_length > 0 {
-            out <<= 1;
-            out |= self.read_bit() as usize;
-            bit_length -= 1;
+    pub fn next(&mut self, bit_length: usize) -> Result<usize> {
+        let mut out = 0_usize;
+
+        for i in 0..bit_length {
+            out |= (self.read_bit() as usize) << i;
         }
 
-        let mut reverse = 0_usize;
-        for _ in 0..a {
-            let b = (out & 0b1) as usize;
-            reverse <<= 1;
-            reverse |= b;
-            out >>= 1;
-        }
-
-        Ok(reverse)
+        Ok(out)
     }
 }
 
