@@ -186,6 +186,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn parse() -> Result<()> {
+        let data = dump_gif("./dance.gif")?;
+
+        let mut decoder = Decoder::new(data);
+        let compressed_gif = decoder.parse()?;
+
+        let first_image = compressed_gif
+            .blocks
+            .iter()
+            .find(|block| matches!(block, Block::TableBasedImage(_)))
+            .unwrap();
+
+        if let Block::TableBasedImage(tbi) = first_image {
+            assert_eq!([0, 157], tbi.image_data[0][0..2]);
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn decode() -> Result<()> {
         let data = dump_gif("./sample_1.gif")?;
 

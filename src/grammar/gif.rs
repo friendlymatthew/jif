@@ -97,7 +97,7 @@ impl GifDataStream {
                         }
 
                         if next_code < code_table.len() {
-                            let mut colors = &code_table[next_code];
+                            let colors = &code_table[next_code];
                             index_stream.extend(colors.clone());
 
                             let k = colors.first().ok_or(eyre!("Failed to get any color"))?;

@@ -44,15 +44,15 @@ impl BitStream {
             bit_length -= 1;
         }
 
-        let mut reverse = 0;
+        let mut reverse = 0_usize;
         for _ in 0..a {
-            let b = out & 0b1;
+            let b = (out & 0b1) as usize;
             reverse <<= 1;
             reverse |= b;
             out >>= 1;
         }
 
-        Ok(reverse as usize)
+        Ok(reverse)
     }
 }
 
@@ -86,6 +86,28 @@ mod tests {
 
         assert_eq!(bitstream.next(3)?, 4);
         assert_eq!(bitstream.next(3)?, 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_dance_header() -> Result<()> {
+        let data = [0, 157];
+
+        let mut bitstream = BitStream::new(&vec![data.to_vec()]);
+
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 0);
+        assert_eq!(bitstream.read_bit(), 1);
+
+        bitstream = BitStream::new(&vec![data.to_vec()]);
+        assert_eq!(bitstream.next(9)?, 256);
 
         Ok(())
     }
