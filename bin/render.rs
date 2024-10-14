@@ -1,11 +1,23 @@
+use std::path::PathBuf;
+
 use eyre::Result;
 use minifb::{Window, WindowOptions};
 
+use clap::Parser;
 use gif::{Decoder, dump_gif};
 use gif::grammar::LogicalScreenDescriptor;
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(long)]
+    gif_path: PathBuf,
+}
+
 fn main() -> Result<()> {
-    let data = dump_gif("/Users/matthew/Desktop/gif/sample_1.gif")?;
+    let Args { gif_path } = Args::parse();
+
+    let data = dump_gif(gif_path.to_str().expect("Failed to find path"))?;
     let mut decoder = Decoder::new(data);
     let compressed_gif = decoder.parse()?;
 

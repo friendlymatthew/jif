@@ -131,7 +131,9 @@ impl GifDataStream {
                         .unwrap()
                         .chunks_exact(3)
                         .map(|c| {
-                            let [r, g, b] = c else { panic!("") };
+                            let [r, g, b] = c else {
+                                panic!("Expected chunks of three.")
+                            };
 
                             u32::from_be_bytes([0u8, *r, *g, *b])
                         })
