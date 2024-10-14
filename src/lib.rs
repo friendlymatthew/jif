@@ -6,8 +6,10 @@ use eyre::Result;
 
 pub use decode::Decoder;
 
+mod bitstream;
 mod buffer;
 mod decode;
+pub mod gif_data_stream;
 pub mod grammar;
 
 pub fn dump_gif(path: &str) -> Result<Vec<u8>> {

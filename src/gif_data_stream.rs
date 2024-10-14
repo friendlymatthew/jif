@@ -2,8 +2,9 @@ use std::fmt::Debug;
 
 use eyre::{eyre, Ok, Result};
 
-use super::{
-    ApplicationExtension, BitStream, build_code_table, CommentExtension, GraphicControlExtension,
+use crate::bitstream::BitStream;
+use crate::grammar::{
+    ApplicationExtension, build_code_table, CommentExtension, GraphicControlExtension,
     LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
 };
 

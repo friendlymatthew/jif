@@ -4,13 +4,14 @@ use crate::{
     buffer::Buffer,
     grammar::{
         ApplicationExtension,
-        Block, CommentExtension, GifDataStream, GraphicControlExtension, ImageDescriptor,
-        label::{
+        CommentExtension, GraphicControlExtension, ImageDescriptor, label::{
             APPLICATION_EXTENSION, COMMENT_EXTENSION, EXTENSION, GRAPHIC_CONTROL_EXTENSION,
             IMAGE_DESCRIPTOR, PLAIN_TEXT_EXTENSION,
-        }, LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
+        },
+        LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
     },
 };
+use crate::gif_data_stream::{Block, GifDataStream};
 
 /// The decoder is the program used to process a GIF data stream. It processes
 /// the data stream sequentially, parsing the various blocks and sub-blocks,
