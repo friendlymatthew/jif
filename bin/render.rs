@@ -1,9 +1,11 @@
 use std::path::PathBuf;
+use std::thread::sleep;
+use std::time::Duration;
 
+use clap::Parser;
 use eyre::Result;
 use minifb::{Window, WindowOptions};
 
-use clap::Parser;
 use gif::{Decoder, dump_gif};
 use gif::grammar::LogicalScreenDescriptor;
 
@@ -12,10 +14,16 @@ use gif::grammar::LogicalScreenDescriptor;
 struct Args {
     #[arg(long)]
     gif_path: PathBuf,
+
+    #[arg(long, short, default_value = "100")]
+    frame_sleep_ms: u16,
 }
 
 fn main() -> Result<()> {
-    let Args { gif_path } = Args::parse();
+    let Args {
+        gif_path,
+        frame_sleep_ms,
+    } = Args::parse();
 
     let data = dump_gif(gif_path.to_str().expect("Failed to find path"))?;
     let mut decoder = Decoder::new(data);
@@ -34,12 +42,20 @@ fn main() -> Result<()> {
         WindowOptions::default(),
     )?;
 
+    window.set_target_fps(30);
+
     let frames = compressed_gif.decompress()?;
 
-    let picture = &frames[0];
-
     while window.is_open() {
-        window.update_with_buffer(picture, canvas_width as usize, canvas_height as usize)?;
+        for frame in &frames {
+            let (image_descriptor, pixels) = frame;
+            window.update_with_buffer(
+                pixels,
+                image_descriptor.image_width as usize,
+                image_descriptor.image_height as usize,
+            )?;
+            sleep(Duration::from_millis(frame_sleep_ms as u64));
+        }
     }
 
     Ok(())

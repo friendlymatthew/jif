@@ -5,7 +5,7 @@ use eyre::{eyre, Ok, Result};
 use crate::bitstream::BitStream;
 use crate::grammar::{
     ApplicationExtension, build_code_table, CommentExtension, GraphicControlExtension,
-    LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
+    ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
 };
 
 #[derive(Debug)]
@@ -35,7 +35,7 @@ pub struct GifDataStream {
 }
 
 impl GifDataStream {
-    pub fn decompress(&self) -> Result<Vec<Vec<u32>>> {
+    pub fn decompress(&self) -> Result<Vec<(&ImageDescriptor, Vec<u32>)>> {
         let mut blocks_iter = self.blocks.iter();
 
         let mut frames = vec![];
@@ -55,7 +55,7 @@ impl GifDataStream {
                 Some(Block::PlainTextExtension(_)) => {}
                 Some(Block::TableBasedImage(tbi)) => {
                     let TableBasedImage {
-                        image_descriptor: _image_descriptor,
+                        image_descriptor,
                         image_data,
                         local_color_table,
                         lzw_minimum_code,
@@ -79,15 +79,19 @@ impl GifDataStream {
                     let mut index_stream = vec![];
                     let mut prev_code = usize::MAX;
 
+                    let mut debug_codes = vec![];
+
                     while !bitstream.eof(current_code_len) {
                         let next_code = bitstream.next(current_code_len)?;
-                        dbg!(next_code);
+                        //  dbg!(next_code);
+                        debug_codes.push(next_code);
 
                         if next_code == clear_code_key {
                             current_code_len = (*lzw_minimum_code + 1) as usize;
                             code_table = build_code_table(initial_code_table_len);
 
                             let code = bitstream.next(current_code_len)?;
+                            debug_codes.push(code);
                             index_stream.extend(code_table[code].clone());
                             prev_code = code;
                             continue;
@@ -144,7 +148,7 @@ impl GifDataStream {
                         .map(|index| global_color_table[*index])
                         .collect();
 
-                    frames.push(pixels);
+                    frames.push((image_descriptor, pixels));
                 }
                 Some(_) => unreachable!("Encountered an out of order Block."),
                 None => unreachable!("Unexpected EOF."),
