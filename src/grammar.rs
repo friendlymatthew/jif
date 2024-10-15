@@ -55,6 +55,7 @@ impl DisposalMethod {
 ///
 /// This block is OPTIONAL; at most one GraphicControlExtension may preced a
 /// graphic rendering block.
+#[derive(Debug)]
 pub struct GraphicControlExtension {
     pub packed_field: u8,
 
@@ -77,7 +78,7 @@ impl GraphicControlExtension {
         DisposalMethod::from(disposal_method)
     }
 
-    /// Indicates whether or not user input is expected before continuing. If
+    /// Indicates whether user input is expected before continuing. If
     /// the flag is set, processing will continue when user input is entered.
     /// The nature of the User input is determined by the application (Carriage
     /// Return, Mouse Button Click, etc...).
@@ -92,26 +93,6 @@ impl GraphicControlExtension {
     }
 }
 
-impl Debug for GraphicControlExtension {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "GraphicControlExtension {{
-    disposal_method: {:?},
-    user_input_flag: {},
-    transparent_color_flag: {},
-    delay_time: {},
-    transparent_color_index: {},
-}}",
-            self.disposal_method(),
-            self.user_input_flag(),
-            self.transparent_color_flag(),
-            self.delay_time,
-            self.transparent_color_index
-        )
-    }
-}
-
 /// The ImageDescriptor contains the parameters necessary to process a table
 /// based image. The coordinates in this block refer to coordinates within the
 /// Logical Screen, and are given in pixels. The ImageDescriptor is always
@@ -120,6 +101,7 @@ impl Debug for GraphicControlExtension {
 /// This block is REQUIRED for an image. Exactly one ImageDescriptor must be
 /// present per image in the data stream. An unlimited number of images may be
 /// present per data stream.
+#[derive(Debug)]
 pub struct ImageDescriptor {
     /// Column number, in pixels, of the left edge of this image, with respect
     /// to the left edge of the Logical Screen. Leftmost column of the Logical
@@ -167,38 +149,6 @@ impl ImageDescriptor {
     }
 }
 
-impl Debug for ImageDescriptor {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "ImageDescriptor {{
-    image_left: {},
-    image_top: {},
-    image_width: {},
-    image_height: {},
-    local_color_table_flag: {},
-    interlace_flag: {},
-    sort_flag: {},
-    local_color_table_size: {},
-}}",
-            self.image_left,
-            self.image_top,
-            self.image_width,
-            self.image_height,
-            self.local_color_table_flag(),
-            self.interlace_flag(),
-            self.sort_flag(),
-            {
-                if self.local_color_table_flag() {
-                    self.local_color_table_size()
-                } else {
-                    0
-                }
-            }
-        )
-    }
-}
-
 /// The LogicalScreenDescriptor contains the parameters necessary to define the
 /// area of the display device within which the images will be rendered.
 ///
@@ -208,7 +158,7 @@ impl Debug for ImageDescriptor {
 /// coordinates in a window-based environment.
 ///
 /// This block is REQUIRED; exactly one LogicalScreenDescriptor must be present.
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct LogicalScreenDescriptor {
     /// Width, in pixels, of the Logical Screen where images will be rendered.
     pub canvas_width: u16,
@@ -259,38 +209,6 @@ impl LogicalScreenDescriptor {
     /// Table.
     pub fn global_color_table_size(&self) -> usize {
         (1 << ((self.packed_field & 0b111) + 1)) * 3
-    }
-}
-
-impl Debug for LogicalScreenDescriptor {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "LogicalScreenDescriptor {{
-    canvas_width: {},
-    canvas_height: {},
-    global_color_table_flag: {},
-    color_resolution: {},
-    sort_flag: {},
-    global_color_table_size: {}
-    background_color_index: {},
-    pixel_aspect_ratio: {},
-}}",
-            self.canvas_width,
-            self.canvas_height,
-            self.global_color_table_flag(),
-            self.color_resolution(),
-            self.sort_flag(),
-            {
-                if self.global_color_table_flag() {
-                    self.global_color_table_size()
-                } else {
-                    0
-                }
-            },
-            self.background_color_index,
-            self.pixel_aspect_ratio,
-        )
     }
 }
 
@@ -348,35 +266,10 @@ pub struct PlainTextExtension {
     pub plain_text_data: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct TableBasedImage {
     pub image_descriptor: ImageDescriptor,
     pub local_color_table: Option<Vec<u8>>,
     pub lzw_minimum_code: u8,
     pub image_data: Vec<Vec<u8>>,
-}
-
-impl Debug for TableBasedImage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "TableBasedImage {{
-    image_descriptor: {:?},
-    local_color_table: {:?},
-    lzw_minimum_code: {},
-    image_data: {:?},
-}}",
-            self.image_descriptor,
-            self.local_color_table,
-            self.lzw_minimum_code,
-            {
-                let mut block_lens = vec![];
-
-                for block in &self.image_data {
-                    block_lens.push(block.len())
-                }
-
-                block_lens
-            },
-        )
-    }
 }

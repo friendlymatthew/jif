@@ -6,8 +6,8 @@ use clap::Parser;
 use eyre::Result;
 use minifb::{Window, WindowOptions};
 
+use gif::{Decoder, dump_gif};
 use gif::grammar::LogicalScreenDescriptor;
-use gif::{dump_gif, Decoder};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -15,13 +15,13 @@ struct Args {
     gif_path: PathBuf,
 
     #[arg(long, short, default_value = "100")]
-    frame_sleep_ms: u16,
+    frame_rate: u16,
 }
 
 fn main() -> Result<()> {
     let Args {
         gif_path,
-        frame_sleep_ms,
+        frame_rate,
     } = Args::parse();
 
     let data = dump_gif(gif_path.to_str().expect("Failed to find path"))?;
@@ -53,7 +53,7 @@ fn main() -> Result<()> {
                 image_descriptor.image_width as usize,
                 image_descriptor.image_height as usize,
             )?;
-            sleep(Duration::from_millis(frame_sleep_ms as u64));
+            sleep(Duration::from_millis(frame_rate as u64));
         }
     }
 
