@@ -1,17 +1,6 @@
-[package]
-name = "gif"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["core", "renderer"]
+resolver = "2"
 
-[[bin]]
-name = "render"
-path = "src/main.rs"
-
-[dependencies]
+[workspace.dependencies]
 eyre = "0.6.12"
-
-# render dependencies
-minifb = "0.27.0"
-clap = { version = "4.5.20", features = ["derive"] }
-
-

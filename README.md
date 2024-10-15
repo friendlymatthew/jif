@@ -1,12 +1,20 @@
-# gif
+# jif
 
-This crate aims to provide a interface that parses, decodes, and renders GIFs.
+This crate aims to provide an interface that parses and decompresses GIF files. It exposes a simple API with 2
+functions: one for parsing bytes into a compressed GIF data stream, and another for decompressing the stream into a list
+of image frames.
+
+This repository also contains a crate to render GIFs. It provides a command-line executable that
+uses [`minifb`](https://github.com/emoon/rust_minifb) to render pixels.
+
+`jif` aims to decode any GIF from [GIPHY](https://giphy.com). Any deviation from Giphy's rendering should be
+considered a bug.
 
 ## Grammar
 
 ### Legend
 
-The following legend defines the symbols used in this grammar for GIF:
+The following legend defines the symbols used in this grammar:
 
 | Symbol | Definition               |
 |--------|--------------------------|
