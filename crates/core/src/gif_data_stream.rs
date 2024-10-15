@@ -4,7 +4,7 @@ use eyre::{eyre, Ok, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, ApplicationExtension, CommentExtension, GraphicControlExtension,
+    ApplicationExtension, build_code_table, CommentExtension, GraphicControlExtension,
     ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
 };
 
@@ -79,18 +79,14 @@ impl GifDataStream {
                     let mut index_stream = vec![];
                     let mut prev_code = usize::MAX;
 
-                    let mut debug_codes = vec![];
-
                     while !bitstream.eof(current_code_len) {
                         let next_code = bitstream.next(current_code_len)?;
-                        debug_codes.push(next_code);
 
                         if next_code == clear_code_key {
                             current_code_len = (*lzw_minimum_code + 1) as usize;
                             code_table = build_code_table(initial_code_table_len);
 
                             let code = bitstream.next(current_code_len)?;
-                            debug_codes.push(code);
                             index_stream.extend(code_table[code].clone());
                             prev_code = code;
                             continue;
@@ -108,7 +104,6 @@ impl GifDataStream {
 
                             let mut new_colors = code_table[prev_code].clone();
                             new_colors.push(*k);
-
                             code_table.push(new_colors);
                         } else {
                             let colors = &code_table[prev_code];

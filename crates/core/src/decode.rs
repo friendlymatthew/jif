@@ -78,15 +78,13 @@ impl Decoder {
                         blocks.push(Block::ApplicationExtension(application_extension));
                     }
                     COMMENT_EXTENSION => {
-                        let mut num_bytes = 0;
-
-                        while buffer.next() != 0 {
-                            num_bytes += 1;
-                        }
+                        let block_size = buffer.next();
 
                         let comment_extension = CommentExtension {
-                            data: buffer.read_slice(num_bytes)?,
+                            data: buffer.read_slice(block_size as usize)?,
                         };
+
+                        let _term_byte = buffer.next();
 
                         blocks.push(Block::CommentExtension(comment_extension));
                     }
