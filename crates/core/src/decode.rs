@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn parse() -> Result<()> {
-        let data = dump_gif("../jersey-dance.gif")?;
+        let data = dump_gif("../../jersey-dance.gif")?;
 
         let mut decoder = Decoder::new(data);
         let compressed_gif = decoder.parse()?;
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn decode() -> Result<()> {
-        let data = dump_gif("../sample_1.gif")?;
+        let data = dump_gif("../../sample_1.gif")?;
 
         let mut decoder = Decoder::new(data);
         let compressed_gif = decoder.parse()?;

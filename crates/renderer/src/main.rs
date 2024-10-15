@@ -1,5 +1,3 @@
-use core::{Decoder, dump_gif};
-use core::grammar::LogicalScreenDescriptor;
 use std::path::PathBuf;
 use std::thread::sleep;
 use std::time::Duration;
@@ -7,6 +5,9 @@ use std::time::Duration;
 use clap::Parser;
 use eyre::Result;
 use minifb::{Window, WindowOptions};
+
+use jif::{Decoder, dump_gif};
+use jif::grammar::LogicalScreenDescriptor;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

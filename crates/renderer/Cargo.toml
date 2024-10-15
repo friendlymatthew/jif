@@ -5,6 +5,6 @@ edition = "2021"
 
 [dependencies]
 eyre.workspace = true
-core = { path = "../core" }
+jif = { path = "../core" }
 minifb = "0.27.0"
 clap = { version = "4.5.20", features = ["derive"] }
