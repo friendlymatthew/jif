@@ -4,7 +4,7 @@ use eyre::{eyre, Ok, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, GraphicControlExtension,
+    build_code_table, ApplicationExtension, CommentExtension, GraphicControlExtension,
     ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
 };
 
@@ -83,7 +83,6 @@ impl GifDataStream {
 
                     while !bitstream.eof(current_code_len) {
                         let next_code = bitstream.next(current_code_len)?;
-                        //  dbg!(next_code);
                         debug_codes.push(next_code);
 
                         if next_code == clear_code_key {

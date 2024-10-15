@@ -36,6 +36,8 @@ impl BitStream {
     }
 
     pub fn next(&mut self, bit_length: usize) -> Result<usize> {
+        let bit_length = bit_length.min(12);
+
         let mut out = 0_usize;
 
         for i in 0..bit_length {
