@@ -1,0 +1,16 @@
+[package]
+name = "jif"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+readme = "../README.md"
+description = "A GIF parser and decoder."
+keywords = ["gif", "gif-decoder", "gif-parser"]
+repository = "https://github.com/friendlymatthew/jif"
+authors = ["Matthew Kim"]
+
+[dependencies]
+eyre.workspace = true
+
+
+
