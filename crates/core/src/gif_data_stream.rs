@@ -4,8 +4,9 @@ use eyre::{eyre, Ok, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, GraphicControlExtension,
-    ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
+    ApplicationExtension, build_code_table, CommentExtension, DisposalMethod,
+    GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
+    TableBasedImage,
 };
 
 #[derive(Debug)]
@@ -38,6 +39,33 @@ impl GifDataStream {
     pub fn decompress(&self) -> Result<Vec<(&ImageDescriptor, Vec<u32>)>> {
         let mut blocks_iter = self.blocks.iter();
 
+        let LogicalScreenDescriptor {
+            canvas_width,
+            canvas_height,
+            background_color_index,
+            ..
+        } = self.logical_screen_descriptor;
+
+        let background_color = if let Some(gce) = &self.global_color_table {
+            let pixels: Vec<_> = gce
+                .chunks_exact(3)
+                .map(|c| {
+                    let [r, g, b] = c else {
+                        panic!("Expected chunks of three.")
+                    };
+
+                    u32::from_be_bytes([0u8, *r, *g, *b])
+                })
+                .collect();
+
+            pixels[background_color_index as usize]
+        } else {
+            0_u32
+        };
+
+        let mut pixel_buffer =
+            { vec![background_color; canvas_width as usize * canvas_height as usize] };
+
         let mut frames = vec![];
 
         while let Some(block) = blocks_iter.next() {
@@ -45,15 +73,19 @@ impl GifDataStream {
                 continue;
             }
 
-            let _graphic_control_extension = if let Block::GraphicControlExtension(gce) = block {
+            let mut block = block;
+
+            let graphic_control_extension = if let Block::GraphicControlExtension(gce) = block {
+                block = blocks_iter.next().unwrap();
+
                 Some(gce)
             } else {
                 None
             };
 
-            match blocks_iter.next() {
-                Some(Block::PlainTextExtension(_)) => {}
-                Some(Block::TableBasedImage(tbi)) => {
+            match block {
+                Block::PlainTextExtension(_) => {}
+                Block::TableBasedImage(tbi) => {
                     let TableBasedImage {
                         image_descriptor,
                         image_data,
@@ -137,15 +169,53 @@ impl GifDataStream {
                         })
                         .collect();
 
-                    let pixels: Vec<u32> = index_stream
+                    let mut pixels: Vec<u32> = index_stream
                         .iter()
                         .map(|index| global_color_table[*index])
                         .collect();
 
-                    frames.push((image_descriptor, pixels));
+                    let &ImageDescriptor {
+                        image_left,
+                        image_top,
+                        image_width,
+                        image_height,
+                        ..
+                    } = image_descriptor;
+
+                    let index = (image_top as usize * image_width as usize) + image_left as usize;
+
+                    if let Some(gce) = graphic_control_extension {
+                        if gce.transparent_color_flag() {
+                            let transparent_color =
+                                global_color_table[gce.transparent_color_index as usize];
+
+                            for i in 0..pixels.len() {
+                                if pixels[i] == transparent_color {
+                                    pixels[i] = pixel_buffer[i + index];
+                                }
+                            }
+                        }
+                    }
+
+                    pixel_buffer[index..index + pixels.len()].copy_from_slice(&pixels);
+
+                    if let Some(gce) = graphic_control_extension {
+                        match gce.disposal_method() {
+                            DisposalMethod::NotRequired
+                            | DisposalMethod::ToBeDefined
+                            | DisposalMethod::DoNotDispose => {}
+                            DisposalMethod::RestoreToBackground => {
+                                todo!();
+                            }
+                            DisposalMethod::RestoreToPrevious => {
+                                todo!();
+                            }
+                        }
+                    }
+
+                    frames.push((image_descriptor, pixel_buffer.clone()));
                 }
-                Some(_) => unreachable!("Encountered an out of order Block."),
-                None => unreachable!("Unexpected EOF."),
+                _ => unreachable!("Encountered an out of order Block."),
             }
         }
 

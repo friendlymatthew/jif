@@ -46,15 +46,15 @@ fn main() -> Result<()> {
     let frames = compressed_gif.decompress()?;
 
     while window.is_open() {
-        for frame in &frames {
-            let (image_descriptor, pixels) = frame;
-            window.update_with_buffer(
-                pixels,
-                image_descriptor.image_width as usize,
-                image_descriptor.image_height as usize,
-            )?;
-            sleep(Duration::from_millis(frame_rate as u64));
-        }
+        // for frame in &frames {
+        let (image_descriptor, pixels) = &frames[1];
+        window.update_with_buffer(
+            pixels,
+            image_descriptor.image_width as usize,
+            image_descriptor.image_height as usize,
+        )?;
+        sleep(Duration::from_millis(frame_rate as u64));
+        // }
     }
 
     Ok(())
