@@ -38,13 +38,13 @@ The following legend defines the symbols used in this grammar:
 
 ## Fuzz
 
-Fuzz `jif` using AFL.
+`jif` uses an AFL fuzzer to assert correctness. GIFs that crash are stored in `/regression` for the purpose of running
+regression tests.
 
-```bash
-# cargo install afl
-cd jif
-cargo afl build
-cargo afl fuzz -i fuzz/in -o fuzz/out target/debug/fuzz
+To fuzz, simply:
+
+```
+./fuzz.sh
 ```
 
 ## Reading
