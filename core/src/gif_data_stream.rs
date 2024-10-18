@@ -229,8 +229,8 @@ impl GifDataStream {
                         pixels: pixel_buffer.clone(),
                     });
                 }
-                Some(_) => unreachable!("Encountered an out of order Block."),
-                None => unreachable!("Unexpected EOF."),
+                Some(_) => return Err(eyre!("Encountered an out of order Block.")),
+                None => return Err(eyre!("Unexpected EOF.")),
             }
         }
 
