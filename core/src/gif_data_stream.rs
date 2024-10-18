@@ -4,7 +4,7 @@ use eyre::{eyre, Ok, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, ApplicationExtension, CommentExtension, DisposalMethod,
+    ApplicationExtension, build_code_table, CommentExtension, DisposalMethod, Frame,
     GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
     TableBasedImage,
 };
@@ -36,7 +36,7 @@ pub struct GifDataStream {
 }
 
 impl GifDataStream {
-    pub fn decompress(&self) -> Result<Vec<(&ImageDescriptor, Vec<u32>)>> {
+    pub fn decompress(&self) -> Result<Vec<Frame>> {
         let LogicalScreenDescriptor {
             canvas_width,
             canvas_height,
@@ -73,7 +73,7 @@ impl GifDataStream {
             }
 
             let graphic_control_extension = if let Block::GraphicControlExtension(gce) = block {
-                Some(gce)
+                Some(gce.clone())
             } else {
                 None
             };
@@ -177,7 +177,7 @@ impl GifDataStream {
                         ..
                     } = image_descriptor;
 
-                    let transparent_color = if let Some(gce) = graphic_control_extension {
+                    let transparent_color = if let Some(gce) = &graphic_control_extension {
                         if gce.transparent_color_flag() {
                             Some(global_color_table[gce.transparent_color_index as usize])
                         } else {
@@ -209,7 +209,7 @@ impl GifDataStream {
                         }
                     }
 
-                    if let Some(gce) = graphic_control_extension {
+                    if let Some(gce) = &graphic_control_extension {
                         match gce.disposal_method() {
                             DisposalMethod::NotRequired
                             | DisposalMethod::ToBeDefined
@@ -223,7 +223,11 @@ impl GifDataStream {
                         }
                     }
 
-                    frames.push((image_descriptor, pixel_buffer.clone()));
+                    frames.push(Frame {
+                        image_descriptor: image_descriptor.clone(),
+                        graphic_control_extension: graphic_control_extension.clone(),
+                        pixels: pixel_buffer.clone(),
+                    });
                 }
                 Some(_) => unreachable!("Encountered an out of order Block."),
                 None => unreachable!("Unexpected EOF."),

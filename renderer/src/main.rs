@@ -7,22 +7,16 @@ use eyre::Result;
 use minifb::{Window, WindowOptions};
 
 use jif::{Decoder, dump_gif};
-use jif::grammar::LogicalScreenDescriptor;
+use jif::grammar::{Frame, LogicalScreenDescriptor};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     gif_path: PathBuf,
-
-    #[arg(long, short, default_value = "100")]
-    frame_rate: u16,
 }
 
 fn main() -> Result<()> {
-    let Args {
-        gif_path,
-        frame_rate,
-    } = Args::parse();
+    let Args { gif_path } = Args::parse();
 
     let data = dump_gif(gif_path.to_str().expect("Failed to find path"))?;
     let mut decoder = Decoder::new(data);
@@ -47,13 +41,21 @@ fn main() -> Result<()> {
 
     while window.is_open() {
         for frame in &frames {
-            let (image_descriptor, pixels) = frame;
+            let Frame {
+                image_descriptor,
+                pixels,
+                graphic_control_extension,
+            } = frame;
+
             window.update_with_buffer(
                 pixels,
                 image_descriptor.image_width as usize,
                 image_descriptor.image_height as usize,
             )?;
-            sleep(Duration::from_millis(frame_rate as u64));
+
+            if let Some(gce) = graphic_control_extension {
+                sleep(Duration::from_millis((gce.delay_time * 10) as u64));
+            }
         }
     }
 

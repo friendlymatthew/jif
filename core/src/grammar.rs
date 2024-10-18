@@ -55,7 +55,7 @@ impl DisposalMethod {
 ///
 /// This block is OPTIONAL; at most one GraphicControlExtension may preced a
 /// graphic rendering block.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GraphicControlExtension {
     pub packed_field: u8,
 
@@ -101,7 +101,7 @@ impl GraphicControlExtension {
 /// This block is REQUIRED for an image. Exactly one ImageDescriptor must be
 /// present per image in the data stream. An unlimited number of images may be
 /// present per data stream.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImageDescriptor {
     /// Column number, in pixels, of the left edge of this image, with respect
     /// to the left edge of the Logical Screen. Leftmost column of the Logical
@@ -272,4 +272,11 @@ pub struct TableBasedImage {
     pub local_color_table: Option<Vec<u8>>,
     pub lzw_minimum_code: u8,
     pub image_data: Vec<Vec<u8>>,
+}
+
+#[derive(Debug)]
+pub struct Frame {
+    pub image_descriptor: ImageDescriptor,
+    pub graphic_control_extension: Option<GraphicControlExtension>,
+    pub pixels: Vec<u32>,
 }

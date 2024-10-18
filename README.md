@@ -49,12 +49,10 @@ To fuzz, simply:
 
 ## Reading
 
-GIF - https://web.archive.org/web/20050216194905/http://www.danbbs.dk/~dino/whirlgif/gif89.html
+https://web.archive.org/web/20050216194905/http://www.danbbs.dk/~dino/whirlgif/gif89.html
 
-LZW and GIF explained - https://web.archive.org/web/20050217131148/http://www.danbbs.dk/~dino/whirlgif/lzw.html
+https://web.archive.org/web/20050217131148/http://www.danbbs.dk/~dino/whirlgif/lzw.html
 
-What's in a GIF - https://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp
+https://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp
 
-A breakdown of a GIF decoder - https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art011
-
-LZW Compression Wikipedia - https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch  
+https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch  
