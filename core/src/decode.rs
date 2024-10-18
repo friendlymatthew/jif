@@ -32,7 +32,7 @@ impl Decoder {
     pub fn parse(&mut self) -> Result<GifDataStream> {
         let buffer = &mut self.buffer;
         buffer.expect(*b"GIF")?;
-        let version = unsafe { String::from_utf8_unchecked(buffer.read_slice(3)?) };
+        let version = String::from_utf8(buffer.read_slice(3)?)?;
 
         // logical_screen_descriptor
         let logical_screen_descriptor = LogicalScreenDescriptor {
@@ -64,9 +64,7 @@ impl Decoder {
                     APPLICATION_EXTENSION => {
                         let _block_size = buffer.next() as usize;
                         let application_extension = ApplicationExtension {
-                            identifier: unsafe {
-                                String::from_utf8_unchecked(buffer.read_slice(8)?)
-                            },
+                            identifier: String::from_utf8(buffer.read_slice(8)?)?,
                             authentication_code: [buffer.next(), buffer.next(), buffer.next()],
                             data: {
                                 let data_size = buffer.next() as usize;
