@@ -1,17 +1,17 @@
 use eyre::{eyre, Result};
 
-use crate::gif_data_stream::{Block, GifDataStream};
 use crate::{
     buffer::Buffer,
     grammar::{
-        label::{
+        ApplicationExtension,
+        CommentExtension, GraphicControlExtension, ImageDescriptor, label::{
             APPLICATION_EXTENSION, COMMENT_EXTENSION, EXTENSION, GRAPHIC_CONTROL_EXTENSION,
             IMAGE_DESCRIPTOR, PLAIN_TEXT_EXTENSION,
         },
-        ApplicationExtension, CommentExtension, GraphicControlExtension, ImageDescriptor,
         LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
     },
 };
+use crate::gif_data_stream::{Block, GifDataStream};
 
 /// The decoder is the program used to process a GIF data stream. It processes
 /// the data stream sequentially, parsing the various blocks and sub-blocks,
@@ -124,7 +124,7 @@ impl Decoder {
                         let _term_byte = buffer.next();
                         blocks.push(Block::PlainTextExtension(plain_text_extension));
                     }
-                    _ => unreachable!("Encountered an inner block extension"),
+                    _ => return Err(eyre!("Encountered an inner block extension")),
                 }
             } else if byte == IMAGE_DESCRIPTOR {
                 let image_descriptor = ImageDescriptor {

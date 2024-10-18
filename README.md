@@ -36,6 +36,17 @@ The following legend defines the symbols used in this grammar:
             - `<Table-Based Image> ::= Image Descriptor [Local Color Table] Image Data`
     - `<Special-Purpose Block> ::= Application Extension | Comment Extension`
 
+## Fuzz
+
+Fuzz `jif` using AFL.
+
+```bash
+# cargo install afl
+cd jif
+cargo afl build
+cargo afl fuzz -i fuzz/in -o fuzz/out target/debug/fuzz
+```
+
 ## Reading
 
 GIF - https://web.archive.org/web/20050216194905/http://www.danbbs.dk/~dino/whirlgif/gif89.html

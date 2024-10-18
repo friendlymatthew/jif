@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use clap::Parser;
 use eyre::Result;
-use minifb::{Key, Window, WindowOptions};
+use minifb::{Window, WindowOptions};
 
 use jif::{Decoder, dump_gif};
 use jif::grammar::LogicalScreenDescriptor;
