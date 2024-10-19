@@ -13,17 +13,18 @@ use crate::{
 };
 use crate::gif_data_stream::{Block, GifDataStream};
 
-/// The decoder is the program used to process a GIF data stream. It processes
-/// the data stream sequentially, parsing the various blocks and sub-blocks,
-/// using control information to set hardware and process parameters and
-/// interpreting the data to render the graphics.
+/// The decoder is the program used to process a GIF data stream.
+///
+/// It processes the data stream sequentially, parsing the various blocks and
+/// sub-blocks, using control information to set hardware and process parameters
+/// and interpreting the data to render the graphics.
 #[derive(Debug)]
 pub struct Decoder {
     buffer: Buffer,
 }
 
 impl Decoder {
-    pub fn new(data: Vec<u8>) -> Self {
+    pub const fn new(data: Vec<u8>) -> Self {
         Self {
             buffer: Buffer::new(data),
         }
@@ -192,7 +193,7 @@ mod tests {
 
     #[test]
     fn parse() -> Result<()> {
-        let data = dump_gif("../jersey-dance.gif")?;
+        let data = dump_gif("../sample_gifs/jersey-dance.gif")?;
 
         let mut decoder = Decoder::new(data);
         let compressed_gif = decoder.parse()?;
@@ -212,7 +213,7 @@ mod tests {
 
     #[test]
     fn decode() -> Result<()> {
-        let data = dump_gif("../sample_1.gif")?;
+        let data = dump_gif("../sample_gifs/sample_1.gif")?;
 
         let mut decoder = Decoder::new(data);
         let compressed_gif = decoder.parse()?;

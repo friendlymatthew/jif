@@ -38,20 +38,22 @@ pub enum DisposalMethod {
 }
 
 impl DisposalMethod {
-    fn from(d: u8) -> DisposalMethod {
+    const fn from(d: u8) -> Self {
         match d {
-            0 => DisposalMethod::NotRequired,
-            1 => DisposalMethod::DoNotDispose,
-            2 => DisposalMethod::RestoreToBackground,
-            3 => DisposalMethod::RestoreToPrevious,
-            _ => DisposalMethod::ToBeDefined,
+            0 => Self::NotRequired,
+            1 => Self::DoNotDispose,
+            2 => Self::RestoreToBackground,
+            3 => Self::RestoreToPrevious,
+            _ => Self::ToBeDefined,
         }
     }
 }
 
 /// The GraphicControlExtension contains parameters used when processing a
-/// graphic rendering block. The scope of this extension is the first graphic
-/// rendering block to follow. The extension contains only one data sub-block.
+/// graphic rendering block.
+///
+/// The scope of this extension is the first graphic rendering block to follow.
+/// The extension contains only one data sub-block.
 ///
 /// This block is OPTIONAL; at most one GraphicControlExtension may preced a
 /// graphic rendering block.
@@ -73,7 +75,7 @@ pub struct GraphicControlExtension {
 impl GraphicControlExtension {
     /// Indicates the way in which the graphic is to be treated after being
     /// displayed.
-    pub fn disposal_method(&self) -> DisposalMethod {
+    pub const fn disposal_method(&self) -> DisposalMethod {
         let disposal_method = (self.packed_field & 0b11100) >> 2;
         DisposalMethod::from(disposal_method)
     }
@@ -82,21 +84,23 @@ impl GraphicControlExtension {
     /// the flag is set, processing will continue when user input is entered.
     /// The nature of the User input is determined by the application (Carriage
     /// Return, Mouse Button Click, etc...).
-    pub fn user_input_flag(&self) -> bool {
+    pub const fn user_input_flag(&self) -> bool {
         ((self.packed_field & 0b10) >> 1) == 1
     }
 
     /// Indicates whether a transparency index is given in the
     /// `transparent_color_index` field.
-    pub fn transparent_color_flag(&self) -> bool {
+    pub const fn transparent_color_flag(&self) -> bool {
         (self.packed_field & 0b1) == 1
     }
 }
 
 /// The ImageDescriptor contains the parameters necessary to process a table
-/// based image. The coordinates in this block refer to coordinates within the
-/// Logical Screen, and are given in pixels. The ImageDescriptor is always
-/// followed by the image data.
+/// based image.
+///
+/// The coordinates in this block refer to coordinates within the Logical
+/// Screen, and are given in pixels. The ImageDescriptor is always followed by
+/// the image data.
 ///
 /// This block is REQUIRED for an image. Exactly one ImageDescriptor must be
 /// present per image in the data stream. An unlimited number of images may be
@@ -124,27 +128,27 @@ pub struct ImageDescriptor {
 impl ImageDescriptor {
     /// Indicates the presence of a LocalColorTable immediately following this
     /// ImageDescriptor.
-    pub fn local_color_table_flag(&self) -> bool {
+    pub const fn local_color_table_flag(&self) -> bool {
         ((self.packed_field & 0b1000_0000) >> 7) == 1
     }
 
     /// Indicates if the image is interlaced. An image is interlaced in a
     /// four-pass interlace pattern.
-    pub fn interlace_flag(&self) -> bool {
+    pub const fn interlace_flag(&self) -> bool {
         ((self.packed_field & 0b100_0000) >> 6) == 1
     }
 
     /// Indicates whether the LocalColorTable is sorted. If the flag is set, the
     /// LocalColorTable is sorted, in order of decreasing importance. Typically,
     /// the order would be decreasing frequency, with most frequent color first.
-    pub fn sort_flag(&self) -> bool {
+    pub const fn sort_flag(&self) -> bool {
         ((self.packed_field & 0b10_0000) >> 4) == 1
     }
 
     /// If the [`local_color_table_flag`] is true, the value in this field is
     /// used to calculate the number of bytes contained in the Local Color
     /// Table.
-    pub fn local_color_table_size(&self) -> usize {
+    pub const fn local_color_table_size(&self) -> usize {
         3 * (1 << ((self.packed_field & 0b111) + 1))
     }
 }
@@ -158,7 +162,7 @@ impl ImageDescriptor {
 /// coordinates in a window-based environment.
 ///
 /// This block is REQUIRED; exactly one LogicalScreenDescriptor must be present.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct LogicalScreenDescriptor {
     /// Width, in pixels, of the Logical Screen where images will be rendered.
     pub canvas_width: u16,
@@ -181,18 +185,19 @@ pub struct LogicalScreenDescriptor {
 
 impl LogicalScreenDescriptor {
     /// Flag indicating the prescence of a Global Color Table.
-    pub fn global_color_table_flag(&self) -> bool {
+    pub const fn global_color_table_flag(&self) -> bool {
         ((self.packed_field & 0b1000_0000) >> 7) == 1
     }
 
-    /// Number of bits per primary color available to the original image, minus
-    /// 1. This value represents the size of the entire palette from which the
-    /// colors in the graphic were selected, not the number of colors actually
-    /// used in the graphic.
+    /// Number of bits per primary color available to the original image - 1.
+    ///
+    /// This value represents the size of the entire palette from which the
+    /// colors in the graphic were selected, not the number of colors
+    /// actually used in the graphic.
     ///
     /// For example, if the value is 3, then the palette of the original image
     /// had 4 bits per primary color available to create the image.
-    pub fn color_resolution(&self) -> u8 {
+    pub const fn color_resolution(&self) -> u8 {
         ((self.packed_field & 0b0111_0000) >> 4) + 1
     }
 
@@ -200,37 +205,38 @@ impl LogicalScreenDescriptor {
     /// the Global Color Table is sorted, in order of decreasing importance.
     /// Typically, the order would be decreasing frequency, with most frequency
     /// color first.
-    pub fn sort_flag(&self) -> bool {
+    pub const fn sort_flag(&self) -> bool {
         ((self.packed_field & 0b1000) >> 3) == 1
     }
 
     /// If the [`global_color_table_flag`] is true, the value in this field is
     /// used to calculate the number of bytes contained in the Global Color
     /// Table.
-    pub fn global_color_table_size(&self) -> usize {
+    pub const fn global_color_table_size(&self) -> usize {
         (1 << ((self.packed_field & 0b111) + 1)) * 3
     }
 }
 
 /// The Plain Text Extension contains textual data and the parameters necessary
-/// to render that data as a graphic, in a simple form. The textual data will be
-/// encoded with the 7-bit printable ASCII characters. Text data are rendered
-/// using a grid of character cells defined by the parameters in the block
-/// fields. Each character is rendered in an individual cell. The textual data
-/// in this block is to be rendered as mono-spaced characters, one character per
-/// cell, with a best fitting font and size. The data characters are taken
-/// sequentially from the data portion of the block and rendered within a cell,
-/// starting with the upper left cell in the grid and proceeding from left to
-/// right and from top to bottom. Text data is rendered until the end of data is
-/// reached or the character grid is filled. The Character Grid contains an
-/// integral number of cells; in the case that the cell dimensions do not allow
-/// for an integral number, fractional cells must be discarded; an encoder must
-/// be careful to specify the grid dimensions accurately so that this does not
-/// happen. This block requires a Global Color Table to be available; the colors
-/// used by this block reference the Global Color Table in the Stream if there
-/// is one, or the Global Color Table from a previous Stream, if one was saved.
-/// This block is a graphic rendering block, therefore it may be modified by a
-/// Graphic Control Extension.
+/// to render that data as a graphic, in a simple form.
+///
+/// The textual data will be encoded with the 7-bit printable ASCII characters.
+/// Text data are rendered using a grid of character cells defined by the
+/// parameters in the block fields. Each character is rendered in an individual
+/// cell. The textual data in this block is to be rendered as mono-spaced
+/// characters, one character per cell, with a best fitting font and size. The
+/// data characters are taken sequentially from the data portion of the block
+/// and rendered within a cell, starting with the upper left cell in the grid
+/// and proceeding from left to right and from top to bottom. Text data is
+/// rendered until the end of data is reached or the character grid is filled.
+/// The Character Grid contains an integral number of cells; in the case that
+/// the cell dimensions do not allow for an integral number, fractional cells
+/// must be discarded; an encoder must be careful to specify the grid dimensions
+/// accurately so that this does not happen. This block requires a Global Color
+/// Table to be available; the colors used by this block reference the Global
+/// Color Table in the Stream if there is one, or the Global Color Table from a
+/// previous Stream, if one was saved. This block is a graphic rendering block,
+/// therefore it may be modified by a Graphic Control Extension.
 #[derive(Debug)]
 pub struct PlainTextExtension {
     /// Column number, in pixels, of the left edge of the text grid, with

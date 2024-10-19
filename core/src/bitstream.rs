@@ -8,14 +8,14 @@ pub struct BitStream {
 }
 
 impl BitStream {
-    pub fn new(image_data: &Vec<Vec<u8>>) -> BitStream {
+    pub fn new(image_data: &Vec<Vec<u8>>) -> Self {
         let mut data = vec![];
 
         for image in image_data {
             data.extend(image);
         }
 
-        BitStream { cursor: 0, data }
+        Self { cursor: 0, data }
     }
 
     #[inline]
@@ -24,7 +24,7 @@ impl BitStream {
     }
 
     #[inline]
-    fn divmod_8(&self) -> (usize, usize) {
+    const fn divmod_8(&self) -> (usize, usize) {
         (self.cursor / 8, self.cursor % 8)
     }
 

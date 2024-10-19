@@ -9,11 +9,11 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(data: Vec<u8>) -> Self {
+    pub const fn new(data: Vec<u8>) -> Self {
         Self { cursor: 0, data }
     }
 
-    pub fn _current(&self) -> usize {
+    pub const fn _current(&self) -> usize {
         self.cursor
     }
 

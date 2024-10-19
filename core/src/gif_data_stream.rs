@@ -1,10 +1,10 @@
 use std::fmt::Debug;
 
-use eyre::{eyre, Ok, Result};
+use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, ApplicationExtension, CommentExtension, DisposalMethod, Frame,
+    ApplicationExtension, build_code_table, CommentExtension, DisposalMethod, Frame,
     GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
     TableBasedImage,
 };
@@ -19,10 +19,10 @@ pub enum Block {
 }
 
 impl Block {
-    fn special_purpose_block(&self) -> bool {
+    const fn special_purpose_block(&self) -> bool {
         matches!(
             self,
-            Block::ApplicationExtension(_) | Block::CommentExtension(_)
+            Self::ApplicationExtension(_) | Self::CommentExtension(_)
         )
     }
 }
@@ -44,8 +44,8 @@ impl GifDataStream {
             ..
         } = self.logical_screen_descriptor;
 
-        let background_color = if let Some(gce) = &self.global_color_table {
-            let pixels: Vec<_> = gce
+        let background_color = self.global_color_table.as_ref().map_or(0_u32, |gct| {
+            let pixels: Vec<_> = gct
                 .chunks_exact(3)
                 .map(|c| {
                     let [r, g, b] = c else {
@@ -57,9 +57,7 @@ impl GifDataStream {
                 .collect();
 
             pixels[background_color_index as usize]
-        } else {
-            0_u32
-        };
+        });
 
         let mut pixel_buffer =
             { vec![background_color; canvas_width as usize * canvas_height as usize] };
@@ -93,7 +91,9 @@ impl GifDataStream {
                     } else if let Some(gct) = &self.global_color_table {
                         gct.len()
                     } else {
-                        panic!("")
+                        return Err(eyre!(
+                            "Failed to find color table. No global or local color table found."
+                        ));
                     };
 
                     let mut code_table = build_code_table(initial_code_table_len);
@@ -131,14 +131,14 @@ impl GifDataStream {
                             let colors = &code_table[next_code];
                             index_stream.extend(colors.clone());
 
-                            let k = colors.first().ok_or(eyre!("Failed to get any color"))?;
+                            let k = colors.first().ok_or_eyre("Failed to get any color")?;
 
                             let mut new_colors = code_table[prev_code].clone();
                             new_colors.push(*k);
                             code_table.push(new_colors);
                         } else {
                             let colors = &code_table[prev_code];
-                            let k = colors.first().ok_or(eyre!("Failed to get color"))?;
+                            let k = colors.first().ok_or_eyre("Failed to get color")?;
 
                             let mut new_sequence = colors.clone();
                             new_sequence.push(*k);
@@ -181,15 +181,13 @@ impl GifDataStream {
                         ..
                     } = image_descriptor;
 
-                    let transparent_color = if let Some(gce) = &graphic_control_extension {
+                    let transparent_color = graphic_control_extension.as_ref().and_then(|gce| {
                         if gce.transparent_color_flag() {
                             Some(global_color_table[gce.transparent_color_index as usize])
                         } else {
                             None
                         }
-                    } else {
-                        None
-                    };
+                    });
 
                     let mut frame_coord = 0;
 
