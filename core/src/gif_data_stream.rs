@@ -187,16 +187,10 @@ impl GifDataStream {
                         None
                     };
 
-                    // dbg!(pixel_buffer.len()); // 319
-                    // dbg!(pixels.len()); // 112
-                    // dbg!(image_width); // 7
-                    // dbg!(image_left); // 2
-                    // dbg!(image_top); // 11
-                    // dbg!(image_height); // 16
+                    let mut frame_coord = 0;
 
                     for row in image_top..image_top + image_height {
                         for i in 0..image_width {
-                            let frame_coord = (row as usize * image_width as usize) + i as usize;
                             let buffer_coord = (row as usize * canvas_width as usize)
                                 + image_left as usize
                                 + i as usize;
@@ -206,6 +200,8 @@ impl GifDataStream {
                             {
                                 pixel_buffer[buffer_coord] = pixels[frame_coord];
                             }
+
+                            frame_coord += 1;
                         }
                     }
 

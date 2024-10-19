@@ -49,10 +49,6 @@ To fuzz, simply:
 
 ## Reading
 
-https://web.archive.org/web/20050216194905/http://www.danbbs.dk/~dino/whirlgif/gif89.html
-
-https://web.archive.org/web/20050217131148/http://www.danbbs.dk/~dino/whirlgif/lzw.html
-
-https://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp
-
-https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch  
+https://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp<br>
+https://web.archive.org/web/20050217131148/http://www.danbbs.dk/~dino/whirlgif/lzw.html<br>
+https://www.w3.org/Graphics/GIF/spec-gif89a.txt<br>

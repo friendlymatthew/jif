@@ -35,8 +35,6 @@ fn main() -> Result<()> {
         WindowOptions::default(),
     )?;
 
-    window.set_target_fps(30);
-
     let frames = compressed_gif.decompress()?;
 
     while window.is_open() {
@@ -47,11 +45,7 @@ fn main() -> Result<()> {
                 graphic_control_extension,
             } = frame;
 
-            window.update_with_buffer(
-                pixels,
-                image_descriptor.image_width as usize,
-                image_descriptor.image_height as usize,
-            )?;
+            window.update_with_buffer(pixels, canvas_width as usize, canvas_height as usize)?;
 
             if let Some(gce) = graphic_control_extension {
                 sleep(Duration::from_millis((gce.delay_time * 10) as u64));
