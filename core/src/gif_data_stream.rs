@@ -48,13 +48,10 @@ impl GifDataStream {
             Some(
                 gct.chunks_exact(3)
                     .map(|chunk| {
-                        let [r, g, b] = chunk else {
-                            return Err(eyre!("Chunk is not a multiple of 3."));
-                        };
-
-                        Ok(u32::from_be_bytes([0u8, *r, *g, *b]))
+                        let (r, g, b) = (chunk[0], chunk[1], chunk[2]);
+                        u32::from_be_bytes([0u8, r, g, b])
                     })
-                    .collect::<Result<Vec<_>>>()?,
+                    .collect::<Vec<_>>(),
             )
         } else {
             None
