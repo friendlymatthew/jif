@@ -105,7 +105,15 @@ impl Decoder {
                             ));
                         }
 
-                        let block_size = buffer.next();
+                        let block_size = {
+                            let size = buffer.next();
+
+                            if size < 12 {
+                                return Err(eyre!("Invalid Plain Text Extension, block must be at least 12 bytes long."));
+                            }
+
+                            size as usize
+                        };
 
                         let plain_text_extension = PlainTextExtension {
                             text_grid_left_position: buffer.read_u16(),
@@ -116,7 +124,7 @@ impl Decoder {
                             character_cell_height: buffer.next(),
                             text_foreground_color_index: buffer.next(),
                             text_background_color_index: buffer.next(),
-                            plain_text_data: buffer.read_slice(block_size as usize - 12)?,
+                            plain_text_data: buffer.read_slice(block_size)?,
                         };
 
                         let _term_byte = buffer.next();

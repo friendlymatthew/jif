@@ -4,7 +4,7 @@ use eyre::{eyre, Ok, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, DisposalMethod, Frame,
+    build_code_table, ApplicationExtension, CommentExtension, DisposalMethod, Frame,
     GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
     TableBasedImage,
 };
@@ -121,6 +121,10 @@ impl GifDataStream {
 
                         if next_code == eoi_code {
                             break;
+                        }
+
+                        if prev_code == usize::MAX || prev_code >= code_table.len() {
+                            return Err(eyre!("Expected initial code to be the clear code key."));
                         }
 
                         if next_code < code_table.len() {
