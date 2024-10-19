@@ -276,7 +276,6 @@ pub struct TableBasedImage {
 
 #[derive(Debug)]
 pub struct Frame {
-    pub image_descriptor: ImageDescriptor,
     pub graphic_control_extension: Option<GraphicControlExtension>,
     pub pixels: Vec<u32>,
 }

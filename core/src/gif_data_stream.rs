@@ -220,7 +220,6 @@ impl GifDataStream {
                     }
 
                     frames.push(Frame {
-                        image_descriptor: image_descriptor.clone(),
                         graphic_control_extension: graphic_control_extension.clone(),
                         pixels: pixel_buffer.clone(),
                     });

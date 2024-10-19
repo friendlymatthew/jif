@@ -40,7 +40,6 @@ fn main() -> Result<()> {
     while window.is_open() {
         for frame in &frames {
             let Frame {
-                image_descriptor,
                 pixels,
                 graphic_control_extension,
             } = frame;
