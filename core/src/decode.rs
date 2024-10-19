@@ -218,9 +218,9 @@ mod tests {
         let compressed_gif = decoder.parse()?;
 
         let frames = compressed_gif.decompress()?;
-        let (_, init_frame) = &frames[0];
+        let frame = &frames[0];
 
-        assert_eq!(init_frame.len(), 100);
+        assert_eq!(frame.pixels.len(), 100);
 
         Ok(())
     }
