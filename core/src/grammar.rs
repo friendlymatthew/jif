@@ -282,6 +282,6 @@ pub struct TableBasedImage {
 
 #[derive(Debug)]
 pub struct Frame {
-    pub graphic_control_extension: Option<GraphicControlExtension>,
+    pub delay_time: Option<u16>,
     pub pixels: Vec<u32>,
 }

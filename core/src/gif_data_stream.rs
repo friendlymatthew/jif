@@ -44,20 +44,30 @@ impl GifDataStream {
             ..
         } = self.logical_screen_descriptor;
 
-        let background_color = self.global_color_table.as_ref().map_or(0_u32, |gct| {
-            let pixels: Vec<_> = gct
-                .chunks_exact(3)
-                .map(|c| {
-                    let [r, g, b] = c else {
-                        panic!("Expected chunks of three.")
-                    };
+        let global_pixels_table = if let Some(gct) = &self.global_color_table {
+            Some(
+                gct.chunks_exact(3)
+                    .map(|chunk| {
+                        let [r, g, b] = chunk else {
+                            return Err(eyre!("Chunk is not a multiple of 3."));
+                        };
 
-                    u32::from_be_bytes([0u8, *r, *g, *b])
-                })
-                .collect();
+                        Ok(u32::from_be_bytes([0u8, *r, *g, *b]))
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+            )
+        } else {
+            None
+        };
 
-            pixels[background_color_index as usize]
-        });
+        let background_color = global_pixels_table.as_ref().map_or(Ok(0u32), |gpt| {
+            let background_color_index = background_color_index as usize;
+            if gpt.len() <= background_color_index {
+                return Err(eyre!("Background color index is out of bounds."));
+            }
+
+            Ok(gpt[background_color_index])
+        })?;
 
         let mut pixel_buffer =
             { vec![background_color; canvas_width as usize * canvas_height as usize] };
@@ -71,7 +81,7 @@ impl GifDataStream {
             }
 
             let graphic_control_extension = if let Block::GraphicControlExtension(gce) = block {
-                Some(gce.clone())
+                Some(gce)
             } else {
                 None
             };
@@ -154,23 +164,27 @@ impl GifDataStream {
                         }
                     }
 
-                    let global_color_table: Vec<u32> = self
-                        .global_color_table
-                        .clone()
-                        .unwrap()
-                        .chunks_exact(3)
-                        .map(|c| {
-                            let [r, g, b] = c else {
-                                panic!("Expected chunks of three.")
-                            };
+                    let pixels_table = if let Some(lct) = local_color_table {
+                        &lct.chunks_exact(3)
+                            .map(|chunk| {
+                                let [r, g, b] = chunk else {
+                                    return Err(eyre!("Chunk is not a multiple of 3."));
+                                };
 
-                            u32::from_be_bytes([0u8, *r, *g, *b])
-                        })
-                        .collect();
+                                Ok(u32::from_be_bytes([0u8, *r, *g, *b]))
+                            })
+                            .collect::<Result<Vec<_>>>()?
+                    } else if let Some(gpt) = &global_pixels_table {
+                        gpt
+                    } else {
+                        return Err(eyre!(
+                            "Failed to find color table. No global or color table found."
+                        ));
+                    };
 
                     let pixels: Vec<u32> = index_stream
                         .iter()
-                        .map(|index| global_color_table[*index])
+                        .map(|index| pixels_table[*index])
                         .collect();
 
                     let &ImageDescriptor {
@@ -183,7 +197,7 @@ impl GifDataStream {
 
                     let transparent_color = graphic_control_extension.as_ref().and_then(|gce| {
                         if gce.transparent_color_flag() {
-                            Some(global_color_table[gce.transparent_color_index as usize])
+                            Some(pixels_table[gce.transparent_color_index as usize])
                         } else {
                             None
                         }
@@ -207,7 +221,7 @@ impl GifDataStream {
                         }
                     }
 
-                    if let Some(gce) = &graphic_control_extension {
+                    if let Some(gce) = graphic_control_extension {
                         match gce.disposal_method() {
                             DisposalMethod::NotRequired
                             | DisposalMethod::ToBeDefined
@@ -222,7 +236,13 @@ impl GifDataStream {
                     }
 
                     frames.push(Frame {
-                        graphic_control_extension: graphic_control_extension.clone(),
+                        delay_time: {
+                            if let Some(gce) = graphic_control_extension {
+                                Some(gce.delay_time)
+                            } else {
+                                None
+                            }
+                        },
                         pixels: pixel_buffer.clone(),
                     });
                 }

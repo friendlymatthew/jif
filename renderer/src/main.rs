@@ -39,15 +39,12 @@ fn main() -> Result<()> {
 
     while window.is_open() {
         for frame in &frames {
-            let Frame {
-                pixels,
-                graphic_control_extension,
-            } = frame;
+            let Frame { pixels, delay_time } = frame;
 
             window.update_with_buffer(pixels, canvas_width as usize, canvas_height as usize)?;
 
-            if let Some(gce) = graphic_control_extension {
-                sleep(Duration::from_millis((gce.delay_time * 10) as u64));
+            if let Some(delay_time) = delay_time {
+                sleep(Duration::from_millis((delay_time * 10) as u64));
             }
         }
     }
