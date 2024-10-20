@@ -39,9 +39,9 @@ impl Decoder {
         let logical_screen_descriptor = LogicalScreenDescriptor {
             canvas_width: buffer.read_u16()?,
             canvas_height: buffer.read_u16()?,
-            packed_field: buffer.next(),
-            background_color_index: buffer.next(),
-            pixel_aspect_ratio: buffer.next(),
+            packed_field: buffer.next()?,
+            background_color_index: buffer.next()?,
+            pixel_aspect_ratio: buffer.next()?,
         };
 
         let global_color_table = if logical_screen_descriptor.global_color_table_flag() {
@@ -58,44 +58,44 @@ impl Decoder {
 
         // this loop iterates by every <Data> block
         while !buffer.at_end() {
-            let byte = buffer.next();
+            let byte = buffer.next()?;
 
             if byte == EXTENSION {
-                match buffer.next() {
+                match buffer.next()? {
                     APPLICATION_EXTENSION => {
-                        let _block_size = buffer.next() as usize;
+                        let _block_size = buffer.next()? as usize;
                         let application_extension = ApplicationExtension {
                             identifier: String::from_utf8(buffer.read_slice(8)?)?,
-                            authentication_code: [buffer.next(), buffer.next(), buffer.next()],
+                            authentication_code: [buffer.next()?, buffer.next()?, buffer.next()?],
                             data: {
-                                let data_size = buffer.next() as usize;
+                                let data_size = buffer.next()? as usize;
                                 buffer.read_slice(data_size)?
                             },
                         };
 
-                        buffer.next();
+                        buffer.next()?;
                         blocks.push(Block::ApplicationExtension(application_extension));
                     }
                     COMMENT_EXTENSION => {
-                        let block_size = buffer.next();
+                        let block_size = buffer.next()?;
 
                         let comment_extension = CommentExtension {
                             data: buffer.read_slice(block_size as usize)?,
                         };
 
-                        let _term_byte = buffer.next();
+                        let _term_byte = buffer.next()?;
 
                         blocks.push(Block::CommentExtension(comment_extension));
                     }
                     GRAPHIC_CONTROL_EXTENSION => {
-                        let _block_size = buffer.next();
+                        let _block_size = buffer.next()?;
                         let graphic_control_extension = GraphicControlExtension {
-                            packed_field: buffer.next(),
+                            packed_field: buffer.next()?,
                             delay_time: buffer.read_u16()?,
-                            transparent_color_index: buffer.next(),
+                            transparent_color_index: buffer.next()?,
                         };
 
-                        let _term_byte = buffer.next();
+                        let _term_byte = buffer.next()?;
 
                         blocks.push(Block::GraphicControlExtension(graphic_control_extension));
                     }
@@ -107,7 +107,7 @@ impl Decoder {
                         }
 
                         let block_size = {
-                            let size = buffer.next();
+                            let size = buffer.next()?;
 
                             if size < 12 {
                                 return Err(eyre!("Invalid Plain Text Extension, block must be at least 12 bytes long."));
@@ -121,14 +121,14 @@ impl Decoder {
                             text_grid_top_position: buffer.read_u16()?,
                             text_grid_width: buffer.read_u16()?,
                             text_grid_height: buffer.read_u16()?,
-                            character_cell_width: buffer.next(),
-                            character_cell_height: buffer.next(),
-                            text_foreground_color_index: buffer.next(),
-                            text_background_color_index: buffer.next(),
+                            character_cell_width: buffer.next()?,
+                            character_cell_height: buffer.next()?,
+                            text_foreground_color_index: buffer.next()?,
+                            text_background_color_index: buffer.next()?,
                             plain_text_data: buffer.read_slice(block_size)?,
                         };
 
-                        let _term_byte = buffer.next();
+                        let _term_byte = buffer.next()?;
                         blocks.push(Block::PlainTextExtension(plain_text_extension));
                     }
                     _ => return Err(eyre!("Encountered an inner block extension")),
@@ -139,7 +139,7 @@ impl Decoder {
                     image_top: buffer.read_u16()?,
                     image_width: buffer.read_u16()?,
                     image_height: buffer.read_u16()?,
-                    packed_field: buffer.next(),
+                    packed_field: buffer.next()?,
                 };
 
                 let local_color_table = if image_descriptor.local_color_table_flag() {
@@ -150,15 +150,15 @@ impl Decoder {
                     None
                 };
 
-                let lzw_minimum_code = buffer.next();
+                let lzw_minimum_code = buffer.next()?;
 
                 let mut sub_blocks = vec![];
 
-                let mut block_size = buffer.next();
+                let mut block_size = buffer.next()?;
 
                 while block_size != 0 {
                     sub_blocks.push(buffer.read_slice(block_size as usize)?);
-                    block_size = buffer.next();
+                    block_size = buffer.next()?;
                 }
 
                 blocks.push(Block::TableBasedImage(TableBasedImage {

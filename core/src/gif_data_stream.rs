@@ -112,7 +112,12 @@ impl GifDataStream {
                             code_table = build_code_table(color_table.len());
 
                             let code = bitstream.next(current_code_len)?;
-                            index_stream.extend(code_table[code].clone());
+                            index_stream.extend(
+                                code_table
+                                    .get(code)
+                                    .ok_or_else(|| eyre!("Code {} not found in code table.", code))?
+                                    .clone(),
+                            );
                             prev_code = code;
                             continue;
                         }
@@ -182,7 +187,7 @@ impl GifDataStream {
                                 + i as usize;
 
                             if frame_coord >= frame.len() {
-                                return Err(eyre!("Improper slice into a Frame."));
+                                return Err(eyre!("Improper slice into a Frame. Want to index {}, but frame is {} long.", frame_coord, frame.len()));
                             }
 
                             if transparent_color.is_none()

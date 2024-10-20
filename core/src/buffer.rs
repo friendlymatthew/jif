@@ -17,15 +17,17 @@ impl Buffer {
         self.cursor
     }
 
-    pub fn next(&mut self) -> u8 {
+    pub fn next(&mut self) -> Result<u8> {
+        self.eof(0)?;
+
         let b = self.data[self.cursor];
         self.cursor += 1;
 
-        b
+        Ok(b)
     }
 
     pub fn _next_by(&mut self, bytes: usize) -> Result<&[u8]> {
-        self.eof(bytes)?;
+        self.eof(bytes - 1)?;
 
         let slice = &self.data[self.cursor..self.cursor + bytes];
         self.cursor += bytes;
@@ -34,7 +36,7 @@ impl Buffer {
     }
 
     pub fn expect<const N: usize>(&mut self, bytes: [u8; N]) -> Result<()> {
-        self.eof(N)?;
+        self.eof(N - 1)?;
 
         if bytes != self.data[self.cursor..self.cursor + N] {
             return Err(eyre!(
@@ -59,7 +61,7 @@ impl Buffer {
     }
 
     pub fn read_u16(&mut self) -> Result<u16> {
-        self.eof(2)?;
+        self.eof(1)?;
 
         let b = u16::from_le_bytes([self.data[self.cursor], self.data[self.cursor + 1]]);
         self.cursor += 2;
@@ -68,7 +70,7 @@ impl Buffer {
     }
 
     pub fn read_slice(&mut self, bytes: usize) -> Result<Vec<u8>> {
-        self.eof(bytes)?;
+        self.eof(bytes - 1)?;
         let slice = self.data[self.cursor..self.cursor + bytes].to_owned();
         self.cursor += bytes;
         Ok(slice)
