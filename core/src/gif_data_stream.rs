@@ -46,17 +46,12 @@ impl GifDataStream {
 
         let global_color_table = self.global_color_table.as_ref().map(parse_color_table);
 
-        let background_color =
-            global_color_table
-                .as_ref()
-                .map_or(Ok(DEFAULT_BACKGROUND_COLOR), |gpt| {
-                    let background_color_index = background_color_index as usize;
-                    if gpt.len() <= background_color_index {
-                        return Err(eyre!("Background color index is out of bounds."));
-                    }
-
-                    Ok(gpt[background_color_index])
-                })?;
+        let background_color = match global_color_table.as_ref() {
+            Some(gct) => *gct
+                .get(background_color_index as usize)
+                .ok_or_eyre("Background color is out of bounds")?,
+            None => DEFAULT_BACKGROUND_COLOR,
+        };
 
         let mut canvas = { vec![background_color; canvas_width as usize * canvas_height as usize] };
 
