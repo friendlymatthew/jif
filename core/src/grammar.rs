@@ -23,6 +23,16 @@ pub fn build_code_table(size: usize) -> Vec<Vec<usize>> {
     (0..size / 3 + 2).map(|c| vec![c]).collect()
 }
 
+pub fn parse_color_table(color_table: &Vec<u8>) -> Vec<u32> {
+    color_table
+        .chunks_exact(3)
+        .map(|chunk| {
+            let (r, g, b) = (chunk[0], chunk[1], chunk[2]);
+            u32::from_be_bytes([0u8, r, g, b])
+        })
+        .collect::<Vec<_>>()
+}
+
 #[derive(Debug)]
 pub struct CommentExtension {
     pub data: Vec<u8>,

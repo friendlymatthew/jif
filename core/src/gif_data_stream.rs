@@ -5,7 +5,7 @@ use eyre::{eyre, Ok, OptionExt, Result};
 use crate::bitstream::BitStream;
 use crate::grammar::{
     ApplicationExtension, build_code_table, CommentExtension, DisposalMethod, Frame,
-    GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
+    GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table, PlainTextExtension,
     TableBasedImage,
 };
 
@@ -44,18 +44,7 @@ impl GifDataStream {
             ..
         } = self.logical_screen_descriptor;
 
-        let global_pixels_table = if let Some(gct) = &self.global_color_table {
-            Some(
-                gct.chunks_exact(3)
-                    .map(|chunk| {
-                        let (r, g, b) = (chunk[0], chunk[1], chunk[2]);
-                        u32::from_be_bytes([0u8, r, g, b])
-                    })
-                    .collect::<Vec<_>>(),
-            )
-        } else {
-            None
-        };
+        let global_pixels_table = self.global_color_table.as_ref().map(parse_color_table);
 
         let background_color = global_pixels_table.as_ref().map_or(Ok(0u32), |gpt| {
             let background_color_index = background_color_index as usize;
@@ -161,27 +150,15 @@ impl GifDataStream {
                         }
                     }
 
-                    let pixels_table = if let Some(lct) = local_color_table {
-                        &lct.chunks_exact(3)
-                            .map(|chunk| {
-                                let [r, g, b] = chunk else {
-                                    return Err(eyre!("Chunk is not a multiple of 3."));
-                                };
-
-                                Ok(u32::from_be_bytes([0u8, *r, *g, *b]))
-                            })
-                            .collect::<Result<Vec<_>>>()?
-                    } else if let Some(gpt) = &global_pixels_table {
-                        gpt
-                    } else {
-                        return Err(eyre!(
-                            "Failed to find color table. No global or color table found."
-                        ));
-                    };
+                    let local_color_table = local_color_table.as_ref().map(parse_color_table);
+                    let color_table = local_color_table
+                        .as_ref()
+                        .or(global_pixels_table.as_ref())
+                        .ok_or_eyre("Failed to find color table.")?;
 
                     let pixels: Vec<u32> = index_stream
                         .iter()
-                        .map(|index| pixels_table[*index])
+                        .map(|index| color_table[*index])
                         .collect();
 
                     let &ImageDescriptor {
@@ -194,7 +171,7 @@ impl GifDataStream {
 
                     let transparent_color = graphic_control_extension.as_ref().and_then(|gce| {
                         if gce.transparent_color_flag() {
-                            Some(pixels_table[gce.transparent_color_index as usize])
+                            Some(color_table[gce.transparent_color_index as usize])
                         } else {
                             None
                         }
