@@ -138,11 +138,17 @@ impl GifDataStream {
 
                             let k = colors.first().ok_or_eyre("Failed to get any color")?;
 
-                            let mut new_colors = code_table[prev_code].clone();
+                            let mut new_colors = code_table
+                                .get(prev_code)
+                                .ok_or_eyre("Code not found in code table.")?
+                                .clone();
                             new_colors.push(*k);
                             code_table.push(new_colors);
                         } else {
-                            let colors = &code_table[prev_code];
+                            let colors = code_table
+                                .get(prev_code)
+                                .ok_or_eyre("Code not found in code table.")?;
+
                             let k = colors.first().ok_or_eyre("Failed to get color")?;
 
                             let mut new_sequence = colors.clone();
