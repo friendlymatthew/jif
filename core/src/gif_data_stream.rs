@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, DisposalMethod, Frame,
-    GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table, PlainTextExtension,
-    TableBasedImage,
+    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
+    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
 };
 
 #[derive(Debug)]
@@ -44,16 +44,19 @@ impl GifDataStream {
             ..
         } = self.logical_screen_descriptor;
 
-        let global_pixels_table = self.global_color_table.as_ref().map(parse_color_table);
+        let global_color_table = self.global_color_table.as_ref().map(parse_color_table);
 
-        let background_color = global_pixels_table.as_ref().map_or(Ok(0u32), |gpt| {
-            let background_color_index = background_color_index as usize;
-            if gpt.len() <= background_color_index {
-                return Err(eyre!("Background color index is out of bounds."));
-            }
+        let background_color =
+            global_color_table
+                .as_ref()
+                .map_or(Ok(DEFAULT_BACKGROUND_COLOR), |gpt| {
+                    let background_color_index = background_color_index as usize;
+                    if gpt.len() <= background_color_index {
+                        return Err(eyre!("Background color index is out of bounds."));
+                    }
 
-            Ok(gpt[background_color_index])
-        })?;
+                    Ok(gpt[background_color_index])
+                })?;
 
         let mut pixel_buffer =
             { vec![background_color; canvas_width as usize * canvas_height as usize] };
@@ -61,20 +64,24 @@ impl GifDataStream {
         let mut blocks_iter = self.blocks.iter();
         let mut frames = vec![];
 
-        while let Some(block) = blocks_iter.next() {
+        while let Some(mut block) = blocks_iter.next() {
             if block.special_purpose_block() {
                 continue;
             }
 
             let graphic_control_extension = if let Block::GraphicControlExtension(gce) = block {
+                block = blocks_iter
+                    .next()
+                    .ok_or_eyre("Expected graphic rending block.")?;
+
                 Some(gce)
             } else {
                 None
             };
 
-            match blocks_iter.next() {
-                Some(Block::PlainTextExtension(_)) => {}
-                Some(Block::TableBasedImage(tbi)) => {
+            match block {
+                Block::PlainTextExtension(_) => {}
+                Block::TableBasedImage(tbi) => {
                     let TableBasedImage {
                         image_descriptor,
                         image_data,
@@ -153,7 +160,7 @@ impl GifDataStream {
                     let local_color_table = local_color_table.as_ref().map(parse_color_table);
                     let color_table = local_color_table
                         .as_ref()
-                        .or(global_pixels_table.as_ref())
+                        .or(global_color_table.as_ref())
                         .ok_or_eyre("Failed to find color table.")?;
 
                     let pixels: Vec<u32> = index_stream
@@ -220,8 +227,7 @@ impl GifDataStream {
                         pixels: pixel_buffer.clone(),
                     });
                 }
-                Some(_) => return Err(eyre!("Encountered an out of order Block.")),
-                None => return Err(eyre!("Unexpected EOF.")),
+                _ => return Err(eyre!("Encountered an out of order Block.")),
             }
         }
 

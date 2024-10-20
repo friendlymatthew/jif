@@ -163,6 +163,8 @@ impl ImageDescriptor {
     }
 }
 
+pub const DEFAULT_BACKGROUND_COLOR: u32 = 0_u32;
+
 /// The LogicalScreenDescriptor contains the parameters necessary to define the
 /// area of the display device within which the images will be rendered.
 ///
