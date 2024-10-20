@@ -58,8 +58,7 @@ impl GifDataStream {
                     Ok(gpt[background_color_index])
                 })?;
 
-        let mut pixel_buffer =
-            { vec![background_color; canvas_width as usize * canvas_height as usize] };
+        let mut canvas = { vec![background_color; canvas_width as usize * canvas_height as usize] };
 
         let mut blocks_iter = self.blocks.iter();
         let mut frames = vec![];
@@ -153,7 +152,7 @@ impl GifDataStream {
                         }
                     }
 
-                    let pixels: Vec<u32> = index_stream
+                    let frame: Vec<u32> = index_stream
                         .iter()
                         .map(|index| color_table[*index])
                         .collect();
@@ -178,14 +177,14 @@ impl GifDataStream {
 
                     for row in image_top..image_top + image_height {
                         for i in 0..image_width {
-                            let buffer_coord = (row as usize * canvas_width as usize)
+                            let canvas_coord = (row as usize * canvas_width as usize)
                                 + image_left as usize
                                 + i as usize;
 
                             if transparent_color.is_none()
-                                || Some(pixels[frame_coord]) != transparent_color
+                                || Some(frame[frame_coord]) != transparent_color
                             {
-                                pixel_buffer[buffer_coord] = pixels[frame_coord];
+                                canvas[canvas_coord] = frame[frame_coord];
                             }
 
                             frame_coord += 1;
@@ -214,7 +213,7 @@ impl GifDataStream {
                                 None
                             }
                         },
-                        pixels: pixel_buffer.clone(),
+                        pixels: canvas.clone(),
                     });
                 }
                 _ => return Err(eyre!("Encountered an out of order Block.")),
