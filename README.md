@@ -38,13 +38,19 @@ The following legend defines the symbols used in this grammar:
 
 ## Fuzz
 
-`jif` uses an AFL fuzzer to assert correctness. GIFs that crash are stored in `/regression` for the purpose of running
-regression tests.
+`jif` uses an [AFL](https://en.wikipedia.org/wiki/American_Fuzzy_Lop_(software)) fuzzer to assert correctness. GIFs that
+crash are stored in `/tests` for the purpose of running
+integration tests. To fuzz, simply run the `./fuzz.sh` shell script.
 
-To fuzz, simply:
+## Profile
 
-```
-./fuzz.sh
+This project uses [samply](https://github.com/mstange/samply) to profile the code. Run `./profile.sh` to run a
+profile. Make sure to pass in a GIF file.
+
+For example:
+
+```bash
+./profile.sh ./sample_gifs/shrek.gif
 ```
 
 ## Reading
