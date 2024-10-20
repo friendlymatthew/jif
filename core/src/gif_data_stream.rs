@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
-    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
-    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
+    ApplicationExtension, build_code_table, CommentExtension, DEFAULT_BACKGROUND_COLOR, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table,
+    PlainTextExtension, TableBasedImage,
 };
 
 #[derive(Debug)]
@@ -181,6 +181,10 @@ impl GifDataStream {
                                 + image_left as usize
                                 + i as usize;
 
+                            if frame_coord >= frame.len() {
+                                return Err(eyre!("Improper slice into a Frame."));
+                            }
+
                             if transparent_color.is_none()
                                 || Some(frame[frame_coord]) != transparent_color
                             {
@@ -205,7 +209,11 @@ impl GifDataStream {
                                 canvas.fill(background_color);
                             }
                             DisposalMethod::RestoreToPrevious => {
-                                todo!();
+                                let Frame { pixels, .. } = frames.last().ok_or_eyre(
+                                    "Expected previous frame to exist, frames empty.",
+                                )?;
+
+                                canvas.copy_from_slice(pixels);
                             }
                         }
                     }
