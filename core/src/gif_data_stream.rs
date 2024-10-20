@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, DEFAULT_BACKGROUND_COLOR, DisposalMethod,
-    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table,
-    PlainTextExtension, TableBasedImage,
+    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
+    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
 };
 
 #[derive(Debug)]
@@ -121,8 +121,8 @@ impl GifDataStream {
                             break;
                         }
 
-                        if prev_code == usize::MAX || prev_code >= code_table.len() {
-                            return Err(eyre!("Expected initial code to be the clear code key."));
+                        if prev_code == usize::MAX {
+                            return Err(eyre!("Expected initial code to be the clear code key. Got prev_code as usize::Max."));
                         }
 
                         if next_code < code_table.len() {

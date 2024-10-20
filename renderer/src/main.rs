@@ -6,8 +6,8 @@ use clap::Parser;
 use eyre::Result;
 use minifb::{Window, WindowOptions};
 
-use jif::{Decoder, dump_gif};
 use jif::grammar::{Frame, LogicalScreenDescriptor};
+use jif::{dump_gif, Decoder};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

@@ -1,17 +1,17 @@
 use eyre::{eyre, Result};
 
+use crate::gif_data_stream::{Block, GifDataStream};
 use crate::{
     buffer::Buffer,
     grammar::{
-        ApplicationExtension,
-        CommentExtension, GraphicControlExtension, ImageDescriptor, label::{
+        label::{
             APPLICATION_EXTENSION, COMMENT_EXTENSION, EXTENSION, GRAPHIC_CONTROL_EXTENSION,
             IMAGE_DESCRIPTOR, PLAIN_TEXT_EXTENSION,
         },
+        ApplicationExtension, CommentExtension, GraphicControlExtension, ImageDescriptor,
         LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
     },
 };
-use crate::gif_data_stream::{Block, GifDataStream};
 
 /// The decoder is the program used to process a GIF data stream.
 ///
