@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
-    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
-    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
+    ApplicationExtension, build_code_table, CommentExtension, DEFAULT_BACKGROUND_COLOR, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table,
+    PlainTextExtension, TableBasedImage,
 };
 
 #[derive(Debug)]
@@ -191,24 +191,24 @@ impl GifDataStream {
                         }
                     }
 
+                    frames.push(Frame {
+                        delay_time: graphic_control_extension.map(|gce| gce.delay_time),
+                        pixels: canvas.clone(),
+                    });
+
                     if let Some(gce) = graphic_control_extension {
                         match gce.disposal_method() {
                             DisposalMethod::NotRequired
                             | DisposalMethod::ToBeDefined
                             | DisposalMethod::DoNotDispose => {}
                             DisposalMethod::RestoreToBackground => {
-                                todo!();
+                                canvas.fill(background_color);
                             }
                             DisposalMethod::RestoreToPrevious => {
                                 todo!();
                             }
                         }
                     }
-
-                    frames.push(Frame {
-                        delay_time: graphic_control_extension.map(|gce| gce.delay_time),
-                        pixels: canvas.clone(),
-                    });
                 }
                 _ => return Err(eyre!("Encountered an out of order Block.")),
             }
