@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    ApplicationExtension, build_code_table, CommentExtension, DEFAULT_BACKGROUND_COLOR, DisposalMethod,
-    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table,
-    PlainTextExtension, TableBasedImage,
+    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
+    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
 };
 
 #[derive(Debug)]
@@ -44,7 +44,10 @@ impl GifDataStream {
             ..
         } = self.logical_screen_descriptor;
 
-        let global_color_table = self.global_color_table.as_ref().map(parse_color_table);
+        let global_color_table = self
+            .global_color_table
+            .as_ref()
+            .map(|t| parse_color_table(t.as_slice()));
 
         let background_color = match global_color_table.as_ref() {
             Some(gct) => *gct
@@ -74,7 +77,7 @@ impl GifDataStream {
             };
 
             match block {
-                Block::PlainTextExtension(_) => {}
+                Block::PlainTextExtension(_) => continue,
                 Block::TableBasedImage(tbi) => {
                     let TableBasedImage {
                         image_descriptor,
@@ -83,7 +86,9 @@ impl GifDataStream {
                         lzw_minimum_code,
                     } = tbi;
 
-                    let local_color_table = local_color_table.as_ref().map(parse_color_table);
+                    let local_color_table = local_color_table
+                        .as_ref()
+                        .map(|t| parse_color_table(t.as_slice()));
                     let color_table = local_color_table
                         .as_ref()
                         .or(global_color_table.as_ref())
@@ -201,13 +206,7 @@ impl GifDataStream {
                     }
 
                     frames.push(Frame {
-                        delay_time: {
-                            if let Some(gce) = graphic_control_extension {
-                                Some(gce.delay_time)
-                            } else {
-                                None
-                            }
-                        },
+                        delay_time: graphic_control_extension.map(|gce| gce.delay_time),
                         pixels: canvas.clone(),
                     });
                 }

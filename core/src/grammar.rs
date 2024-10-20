@@ -23,7 +23,7 @@ pub fn build_code_table(size: usize) -> Vec<Vec<usize>> {
     (0..size + 2).map(|c| vec![c]).collect()
 }
 
-pub fn parse_color_table(color_table: &Vec<u8>) -> Vec<u32> {
+pub fn parse_color_table(color_table: &[u8]) -> Vec<u32> {
     color_table
         .chunks_exact(3)
         .map(|chunk| {
