@@ -1,6 +1,7 @@
 [workspace]
 members = ["core", "renderer"]
 resolver = "2"
+exclude = ["fuzz"]
 
 [workspace.dependencies]
 eyre = "0.6.12"

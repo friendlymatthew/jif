@@ -96,7 +96,9 @@ impl GifDataStream {
 
                     let mut code_table = build_code_table(color_table.len());
 
-                    let clear_code_key = 2_usize.pow(*lzw_minimum_code as u32);
+                    let clear_code_key = 2_usize
+                        .checked_pow(*lzw_minimum_code as u32)
+                        .ok_or_eyre("Integer overflow when computing clear code key.")?;
                     let eoi_code = clear_code_key + 1;
 
                     let mut bitstream = BitStream::new(image_data);

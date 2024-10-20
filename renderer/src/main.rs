@@ -3,11 +3,11 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use clap::Parser;
-use eyre::Result;
+use eyre::{eyre, Result};
 use minifb::{Window, WindowOptions};
 
+use jif::{Decoder, dump_gif};
 use jif::grammar::{Frame, LogicalScreenDescriptor};
-use jif::{dump_gif, Decoder};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -27,6 +27,22 @@ fn main() -> Result<()> {
         canvas_height,
         ..
     } = compressed_gif.logical_screen_descriptor;
+
+    if canvas_width == 0 || canvas_height == 0 {
+        return Err(eyre!(
+            "Canvas width or height can not be 0. Got width: {}, height: {}",
+            canvas_width,
+            canvas_height
+        ));
+    }
+
+    if canvas_width > 1 << 14 || canvas_height > 1 << 14 {
+        return Err(eyre!(
+            "Canvas width or height can not be greater than 16384. Got width: {}, height: {}",
+            canvas_width,
+            canvas_height
+        ));
+    }
 
     let mut window = Window::new(
         "GIF renderer",
