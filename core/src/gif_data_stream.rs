@@ -4,9 +4,9 @@ use eyre::{eyre, Ok, OptionExt, Result};
 
 use crate::bitstream::BitStream;
 use crate::grammar::{
-    build_code_table, parse_color_table, ApplicationExtension, CommentExtension, DisposalMethod,
-    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, PlainTextExtension,
-    TableBasedImage, DEFAULT_BACKGROUND_COLOR,
+    ApplicationExtension, build_code_table, CommentExtension, DEFAULT_BACKGROUND_COLOR, DisposalMethod,
+    Frame, GraphicControlExtension, ImageDescriptor, LogicalScreenDescriptor, parse_color_table,
+    PlainTextExtension, TableBasedImage,
 };
 
 #[derive(Debug)]
@@ -89,17 +89,13 @@ impl GifDataStream {
                         lzw_minimum_code,
                     } = tbi;
 
-                    let initial_code_table_len = if let Some(lct) = local_color_table {
-                        lct.len()
-                    } else if let Some(gct) = &self.global_color_table {
-                        gct.len()
-                    } else {
-                        return Err(eyre!(
-                            "Failed to find color table. No global or local color table found."
-                        ));
-                    };
+                    let local_color_table = local_color_table.as_ref().map(parse_color_table);
+                    let color_table = local_color_table
+                        .as_ref()
+                        .or(global_color_table.as_ref())
+                        .ok_or_eyre("Failed to find color table.")?;
 
-                    let mut code_table = build_code_table(initial_code_table_len);
+                    let mut code_table = build_code_table(color_table.len());
 
                     let clear_code_key = 2_usize.pow(*lzw_minimum_code as u32);
                     let eoi_code = clear_code_key + 1;
@@ -114,7 +110,7 @@ impl GifDataStream {
 
                         if next_code == clear_code_key {
                             current_code_len = (*lzw_minimum_code + 1) as usize;
-                            code_table = build_code_table(initial_code_table_len);
+                            code_table = build_code_table(color_table.len());
 
                             let code = bitstream.next(current_code_len)?;
                             index_stream.extend(code_table[code].clone());
@@ -156,12 +152,6 @@ impl GifDataStream {
                             current_code_len += 1;
                         }
                     }
-
-                    let local_color_table = local_color_table.as_ref().map(parse_color_table);
-                    let color_table = local_color_table
-                        .as_ref()
-                        .or(global_color_table.as_ref())
-                        .ok_or_eyre("Failed to find color table.")?;
 
                     let pixels: Vec<u32> = index_stream
                         .iter()
