@@ -1,17 +1,17 @@
 use eyre::{eyre, Result};
 
-use crate::gif_data_stream::{Block, GifDataStream};
 use crate::{
     buffer::Buffer,
     grammar::{
-        label::{
+        ApplicationExtension,
+        CommentExtension, GraphicControlExtension, ImageDescriptor, label::{
             APPLICATION_EXTENSION, COMMENT_EXTENSION, EXTENSION, GRAPHIC_CONTROL_EXTENSION,
             IMAGE_DESCRIPTOR, PLAIN_TEXT_EXTENSION,
         },
-        ApplicationExtension, CommentExtension, GraphicControlExtension, ImageDescriptor,
         LogicalScreenDescriptor, PlainTextExtension, TableBasedImage,
     },
 };
+use crate::gif_data_stream::{Block, GifDataStream};
 
 /// The decoder is the program used to process a GIF data stream.
 ///
@@ -37,8 +37,8 @@ impl Decoder {
 
         // logical_screen_descriptor
         let logical_screen_descriptor = LogicalScreenDescriptor {
-            canvas_width: buffer.read_u16(),
-            canvas_height: buffer.read_u16(),
+            canvas_width: buffer.read_u16()?,
+            canvas_height: buffer.read_u16()?,
             packed_field: buffer.next(),
             background_color_index: buffer.next(),
             pixel_aspect_ratio: buffer.next(),
@@ -91,7 +91,7 @@ impl Decoder {
                         let _block_size = buffer.next();
                         let graphic_control_extension = GraphicControlExtension {
                             packed_field: buffer.next(),
-                            delay_time: buffer.read_u16(),
+                            delay_time: buffer.read_u16()?,
                             transparent_color_index: buffer.next(),
                         };
 
@@ -117,10 +117,10 @@ impl Decoder {
                         };
 
                         let plain_text_extension = PlainTextExtension {
-                            text_grid_left_position: buffer.read_u16(),
-                            text_grid_top_position: buffer.read_u16(),
-                            text_grid_width: buffer.read_u16(),
-                            text_grid_height: buffer.read_u16(),
+                            text_grid_left_position: buffer.read_u16()?,
+                            text_grid_top_position: buffer.read_u16()?,
+                            text_grid_width: buffer.read_u16()?,
+                            text_grid_height: buffer.read_u16()?,
                             character_cell_width: buffer.next(),
                             character_cell_height: buffer.next(),
                             text_foreground_color_index: buffer.next(),
@@ -135,10 +135,10 @@ impl Decoder {
                 }
             } else if byte == IMAGE_DESCRIPTOR {
                 let image_descriptor = ImageDescriptor {
-                    image_left: buffer.read_u16(),
-                    image_top: buffer.read_u16(),
-                    image_width: buffer.read_u16(),
-                    image_height: buffer.read_u16(),
+                    image_left: buffer.read_u16()?,
+                    image_top: buffer.read_u16()?,
+                    image_width: buffer.read_u16()?,
+                    image_height: buffer.read_u16()?,
                     packed_field: buffer.next(),
                 };
 

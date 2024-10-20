@@ -58,11 +58,13 @@ impl Buffer {
         Err(eyre!("Unexpected EOF"))
     }
 
-    pub fn read_u16(&mut self) -> u16 {
+    pub fn read_u16(&mut self) -> Result<u16> {
+        self.eof(2)?;
+
         let b = u16::from_le_bytes([self.data[self.cursor], self.data[self.cursor + 1]]);
         self.cursor += 2;
 
-        b
+        Ok(b)
     }
 
     pub fn read_slice(&mut self, bytes: usize) -> Result<Vec<u8>> {
